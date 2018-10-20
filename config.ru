@@ -1,10 +1,8 @@
 db = {}
 
-
 def shorten(url, db)
-  while rand = ('a'..'z').to_a.shuffle[0,8].join
+  while rand = 8.times.map{('a'..'z').to_a[rand(26)]}.join
     if !db.key?(rand)
-      puts url
       db[rand] = url
       break
     end
@@ -13,7 +11,6 @@ def shorten(url, db)
 end
 
 run lambda { |env|
-    puts db
     case env['PATH_INFO']
     when "/"
         [200, {'Content-Type'=>'text/html'}, StringIO.new(%q(
