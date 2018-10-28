@@ -10,7 +10,7 @@ def shorten(url, db)
   return rand
 end
 
-run lambda { |env|
+App = lambda { |env|
     case env['PATH_INFO']
     when "/"
         [200, {'Content-Type'=>'text/html'}, StringIO.new(%q(
@@ -47,3 +47,5 @@ run lambda { |env|
       end
     end
 }
+
+run App
