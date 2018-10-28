@@ -5,21 +5,17 @@ class BaseService
 end
 
 class UrlShortenService < BaseService
-  def initialize(url:, db:)
-    @url = url
+  def initialize(db)
     @db = db
   end
 
   def call
-    shorten(@url, @db)
+    shorten(@db)
   end
 
-  def shorten(url, db)
+  def shorten(db)
     while rand = Array.new(8).map { ('a'..'z').to_a[rand(26)] }.join
-      unless db.key?(rand)
-        db[rand] = url
-        break
-      end
+      break unless db.key?(rand)
     end
     rand
   end

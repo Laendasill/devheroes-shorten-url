@@ -1,11 +1,18 @@
 db = {}
 require "./UrlShortenService"
+require "./UrlShortenForm"
 require "rack"
 
 def error_page(message, status = 404)
   response = Rack::Response.new
   response.status = status
   response.write(message)
+  response.finish
+end
+
+def redirect(response, url)
+  response.status = 302
+  response.add_header('Location', "http://#{env['HTTP_HOST']}#{url}")
   response.finish
 end
 
@@ -23,35 +30,26 @@ App = lambda { |env|
     ))
     response.finish
   when '/shorten'
-    if request.post?
-      if request.params['url_name']
-        url = request.params['url_name']
-        unless url.start_with?('http')
-          return error_page("\"#{url}\" It's not a valid URL")
-        end
+    redirect(response, '/') unless request.post?
 
-        short = UrlShortenService.call(url: url, db: db)
-        response.status = 200
-        response.write(%(
-          <a href="http://#{env['HTTP_HOST']}/#{short}">http://#{env['HTTP_HOST']}/#{short}</a>
-        ))
-        return response.finish
-      else
-        return error_page('bad url')
-      end
-    else
-      response.status = 302
-      response.add_header('Location', "http://#{env['HTTP_HOST']}")
+    url = UrlShortenForm.new(request.params['url_name'], db)
+    if url.save
+      response.status = 200
+      response.write(%(
+        <a href="http://#{env['HTTP_HOST']}/#{url.short}">
+          http://#{env['HTTP_HOST']}/#{url.short}
+        </a>
+      ))
       response.finish
+    else
+      error_page(url.errors.join("\n"))
     end
   else
-    if db.key?(request.path_info[1..-1])
-      response.status = 301
-      response.add_header('HTTP_HOST', db[env['PATH_INFO'][1..-1]].split('/')[2])
-      response.add_header('Location', db[env['PATH_INFO'][1..-1]].to_s)
-      return response.finish
-    else
-      return error_page('shorten url not found')
-    end
+    return error_page('shorten url not found') unless db.key?(request.path_info[1..-1])
+
+    response.status = 301
+    response.add_header('HTTP_HOST', db[env['PATH_INFO'][1..-1]].split('/')[2])
+    response.add_header('Location', db[env['PATH_INFO'][1..-1]].to_s)
+    response.finish
   end
 }
