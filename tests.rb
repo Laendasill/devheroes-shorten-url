@@ -18,6 +18,14 @@ describe 'the index page', type: :feature do
     expect(page).to have_content("It's not a valid URL")
   end
 
+  it 'shows error on empty form' do
+    visit '/'
+    fill_in('url_name', with: '')
+    find('button[type="submit"]').click
+
+    expect(page).to have_content("Please enter valid url")
+  end
+
   it 'shows url on good form' do
     valid_url = 'http://valid.pl'
     visit '/'
