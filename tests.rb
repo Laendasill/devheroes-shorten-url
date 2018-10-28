@@ -26,4 +26,14 @@ describe 'the index page', type: :feature do
 
     expect(page).to have_xpath('//a')
   end
+
+  it 'redirects on existing url' do
+    valid_url = 'http://valid.pl'
+    visit '/'
+    fill_in('url_name', with: valid_url)
+    find('button[type="submit"]').click
+
+    find('a').click
+    expect(page.current_url).to include valid_url
+  end
 end
