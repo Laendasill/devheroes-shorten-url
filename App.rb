@@ -1,15 +1,5 @@
 db = {}
-
-def shorten(url, db)
-  while rand = 8.times.map { ('a'..'z').to_a[rand(26)] }.join
-    unless db.key?(rand)
-      db[rand] = url
-      break
-    end
-  end
-  rand
-end
-
+require "./UrlShortenService"
 App = lambda { |env|
   case env['PATH_INFO']
   when '/'
@@ -30,7 +20,7 @@ App = lambda { |env|
           return [404, { 'Content-Type' => 'text/plain' }, StringIO.new("\"#{url}\" It's not a valid URL")]
         end
 
-        short = shorten(url, db)
+        short = UrlShortenService.call(url: url, db: db)
         return [200, { 'Content-Type' => 'text/html' }, StringIO.new(%(
             <a href="http://#{env['HTTP_HOST']}/#{short}">http://#{env['HTTP_HOST']}/#{short}</a>))]
       else
