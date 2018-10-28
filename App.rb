@@ -1,39 +1,57 @@
 db = {}
 require "./UrlShortenService"
-App = lambda { |env|
-  case env['PATH_INFO']
-  when '/'
-    [200, { 'Content-Type' => 'text/html' }, StringIO.new("
+require "rack"
 
-    <form method='POST' action='shorten'>
-        <input type='text' name='url_name' style='width: auto;'/>
-        <button type='submit'>Shorten your url!</button>
-    </form>
-    ")]
+def error_page(message, status = 404)
+  response = Rack::Response.new
+  response.status = status
+  response.write(message)
+  response.finish
+end
+
+App = lambda { |env|
+  request = Rack::Request.new(env)
+  response = Rack::Response.new
+  case request.path_info
+  when '/'
+    response.status = 200
+    response.write(%(
+      <form method='POST' action='shorten'>
+          <input type='text' name='url_name' style='width: auto;'/>
+          <button type='submit'>Shorten your url!</button>
+      </form>
+    ))
+    response.finish
   when '/shorten'
-    if env['REQUEST_METHOD'] == 'POST'
-      post_data = URI.decode_www_form(env['rack.input'].read).flatten
-      idx = post_data.find_index('url_name')
-      if idx >= 0
-        url = post_data[idx + 1]
+    if request.post?
+      if request.params['url_name']
+        url = request.params['url_name']
         unless url.start_with?('http')
-          return [404, { 'Content-Type' => 'text/plain' }, StringIO.new("\"#{url}\" It's not a valid URL")]
+          return error_page("\"#{url}\" It's not a valid URL")
         end
 
         short = UrlShortenService.call(url: url, db: db)
-        return [200, { 'Content-Type' => 'text/html' }, StringIO.new(%(
-            <a href="http://#{env['HTTP_HOST']}/#{short}">http://#{env['HTTP_HOST']}/#{short}</a>))]
+        response.status = 200
+        response.write(%(
+          <a href="http://#{env['HTTP_HOST']}/#{short}">http://#{env['HTTP_HOST']}/#{short}</a>
+        ))
+        return response.finish
       else
-        return [404, { 'Content-Type' => 'text/plain' }, StringIO.new('bad url')]
+        return error_page('bad url')
       end
     else
-      return [302, { 'Location' => "http://#{env['HTTP_HOST']}" }, []]
+      response.status = 302
+      response.add_header('Location', "http://#{env['HTTP_HOST']}")
+      response.finish
     end
   else
-    if db.key?(env['PATH_INFO'][1..-1])
-      return [301, { 'HTTP_HOST' => db[env['PATH_INFO'][1..-1]].split('/')[2], 'Location' => (db[env['PATH_INFO'][1..-1]]).to_s }, []]
+    if db.key?(request.path_info[1..-1])
+      response.status = 301
+      response.add_header('HTTP_HOST', db[env['PATH_INFO'][1..-1]].split('/')[2])
+      response.add_header('Location', db[env['PATH_INFO'][1..-1]].to_s)
+      return response.finish
     else
-      return [404, { 'Content-Type' => 'text/plain' }, StringIO.new(env)]
+      return error_page('shorten url not found')
     end
   end
 }
