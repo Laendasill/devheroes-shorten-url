@@ -23,7 +23,7 @@ describe 'the index page', type: :feature do
     fill_in('url_name', with: '')
     find('button[type="submit"]').click
 
-    expect(page).to have_content("Please enter valid url")
+    expect(page).to have_content("url can't be blank")
   end
 
   it 'shows url on good form' do
