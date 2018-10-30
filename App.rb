@@ -41,7 +41,7 @@ App = lambda { |env|
       </a>
     ))
   else
-    return error_page('shorten url not found') unless db.key?(request.path_info[1..-1])
+    return error_page(response, 'shorten url not found') unless db.key?(request.path_info[1..-1])
 
     response.status = 301
     response.add_header('HTTP_HOST', db[env['PATH_INFO'][1..-1]].split('/')[2])

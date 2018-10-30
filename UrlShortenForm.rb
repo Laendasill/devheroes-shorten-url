@@ -1,17 +1,46 @@
 require './UrlShortenService'
 
+class UrlFormValidaotr
+  BLANK_ERROR = "url can't be blank".freeze
+  attr_reader :errors
+  def initialize(url)
+    @url = url
+  end
+
+  def validate
+    @errors = []
+    if url_empty?
+      errors.push(BLANK_ERROR)
+      return
+    end
+    errors.push("\"#{@url}\" It's not a valid URL") unless valid_url?
+  end
+
+  def errors?
+    @errors.empty?
+  end
+
+  private
+
+  def url_empty?
+    @url.to_s.empty?
+  end
+
+  def valid_url?
+    @url.start_with?('http')
+  end
+end
+
 class UrlShortenForm
   attr_accessor :url_name, :short
-  attr_reader :errors
-  BLANK_ERROR = "url can't be blank"
+  
   def initialize(url, db)
     @url_name = url
     @db = db
-    @errors = []
   end
 
   def save
-    false unless valid?
+    return false unless valid?
 
     @short = UrlShortenService.call(@db)
     @db[@short] = @url_name
@@ -19,21 +48,18 @@ class UrlShortenForm
   end
 
   def validate
-    errors = []
-    if @url_name.to_s.empty?
-      errors.push(BLANK_ERROR)
-      return
-    end
-    errors.push("\"#{@url_name}\" It's not a valid URL") unless @url_name.start_with?('http')
-    errors  
+    @validator ||= UrlFormValidaotr.new(@url_name)
+    @validator.validate
+  end
+
+  def errors
+    @validator.errors if @validator
+    []
   end
 
   def valid?
-    @errors = validate
-    puts "printing errors"
-    puts @errors
-    puts @errors.empty?
-    true if @errors.empty?
-    false
+    validate
+    false if @validator.errors?
+    true
   end
 end
