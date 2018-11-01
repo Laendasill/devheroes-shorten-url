@@ -5,7 +5,7 @@ require "rack"
 
 def error_page(response, message, status = 404)
   response.status = status
-  response.write(message)
+  response.write("errors occured: #{message}")
   response.finish
 end
 
@@ -32,14 +32,16 @@ App = lambda { |env|
     return redirect(response, request, '/') unless request.post?
 
     url = UrlShortenForm.new(request.params['url_name'], db)
-    return error_page(response, url.errors.join("\n")) unless url.save
-
-    response.status = 200
-    response.write(%(
-      <a href="http://#{env['HTTP_HOST']}/#{url.short}">
-        http://#{env['HTTP_HOST']}/#{url.short}
-      </a>
-    ))
+    if url.save
+      response.status = 200
+      response.write(%(
+        <a href="http://#{env['HTTP_HOST']}/#{url.short}">
+          http://#{env['HTTP_HOST']}/#{url.short}
+        </a>
+      ))
+    else
+      return error_page(response, url.errors.join("\n"))
+    end
   else
     return error_page(response, 'shorten url not found') unless db.key?(request.path_info[1..-1])
 
