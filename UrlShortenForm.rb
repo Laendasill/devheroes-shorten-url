@@ -13,7 +13,7 @@ class UrlShortenForm
     return false unless valid?
 
     @short = UrlShortenService.call(@db)
-    @db[@short] = @url_name
+    @db.add({key: @short, value: @url_name})
     true
   end
 
