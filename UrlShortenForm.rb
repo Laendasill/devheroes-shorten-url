@@ -17,7 +17,7 @@ class UrlFormValidaotr
   end
 
   def errors?
-    @errors.empty?
+    @errors.empty? == false
   end
 
   private
@@ -33,7 +33,7 @@ end
 
 class UrlShortenForm
   attr_accessor :url_name, :short
-  
+
   def initialize(url, db)
     @url_name = url
     @db = db
@@ -53,13 +53,13 @@ class UrlShortenForm
   end
 
   def errors
-    @validator.errors if @validator
+    return @validator.errors if @validator
+  
     []
   end
 
   def valid?
     validate
-    false if @validator.errors?
-    true
+    @validator.errors? == false
   end
 end
