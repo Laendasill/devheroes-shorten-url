@@ -30,40 +30,54 @@ class HashModel < Model
 end
 
 require 'pg'
+require 'logger'
+
+
 
 def pg_connection
+  logger = Logger.new(STDOUT)
   uri = URI.parse(ENV['DATABASE_URL'])
   con = PG.connect(user: uri.user, host: uri.host, port: uri.port, password: uri.password, dbname: uri.path[1..-1])
   con
 rescue PG::Error => e
-  puts e.message
+  logger.fatal(e.message)
 end
 
 class PgModel < Model
 
   def initialize(config={})
+    @logger = Logger.new(STDOUT)
     @db = pg_connection
-    @db.prepare('add', %q{insert into urls (short,original) VALUES($1,$2);})
-    @db.prepare('exist', %{select count(id) from urls where short = $1;})
-    @db.prepare('find_id', %q{select original from urls where short=$1})
+    #@db.prepare('add', %q{insert into urls (short,original) VALUES($1,$2);})
+    #@db.prepare('exist', %q{select count(id) from urls where short = $1;})
+    #@db.prepare('find_id', %q{select original from urls where short=$1})
   end
 
   def key?(key)
-    @db.exec_prepared('exist', [key]) do |result|
+    return false unless key
+    @logger.info("is key in database?")
+    @db.exec_params(%q{select count(id) from urls where short = $1;}, [@db.quote_ident(key)]) do |result|
       return result[0]['count'] == '0'
     end
+  rescue PG::Error => e
+    @logger.fatal(e.message)
   end
 
   def add(key:, value:)
-    @db.exec_prepared('add', [key, value])
+    @logger.info("adding key")
+    @db.exec_params(%q{insert into urls (short,original) VALUES($1,$2);}, [@db.quote_ident(key), @db.quote_ident(value)])
     true
   rescue PG::Error => e
-    puts e.message
+    @logger.fatal(e.message)
     false
   end
 
   def get(key)
-    result = @db.exec_prepared('find_id', [key])
+    @logger.info("get key")
+    result = @db.exec_params(%q{select original from urls where short=$1}, [@db.quote_ident(key)])
     result.first()['original'] if result.first()
+  rescue PG::Error => e
+    @logger.fatal(e.message)
+    false
   end
 end
