@@ -49,13 +49,10 @@ class App
         return error_page(response, url.errors.join("\n"))
       end
     else
-      return redirect(response, request, '/') unless @db.key?(request.path_info[1..-1])
+      host = @db.key?(request.path_info[1..-1])
+      return redirect(response, request, '/') unless host
 
-      host = @db.get(request.path_info[1..-1])
-      location = host
-      if host
-        host = host.split('/')[2]
-      end
+      host = host.split('/')[2]
       response.status = 301
       response.add_header('HTTP_HOST', host)
       response.add_header('Location', location.to_s)

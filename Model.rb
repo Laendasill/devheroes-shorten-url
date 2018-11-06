@@ -48,24 +48,25 @@ class PgModel < Model
   def initialize(config={})
     @logger = Logger.new(STDOUT)
     @db = pg_connection
-    #@db.prepare('add', %q{insert into urls (short,original) VALUES($1,$2);})
-    #@db.prepare('exist', %q{select count(id) from urls where short = $1;})
-    #@db.prepare('find_id', %q{select original from urls where short=$1})
+    @db.prepare('add', %q{insert into urls (short,original) VALUES($1,$2);})
+    @db.prepare('exist', %q{select count(id) from urls where short = $1;})
+    @db.prepare('find_id', %q{select original from urls where short=$1})
   end
 
   def key?(key)
     return false unless key
-    @logger.info("is key in database?")
-    @db.exec_params(%q{select count(id) from urls where short = $1;}, [@db.quote_ident(key)]) do |result|
-      return result[0]['count'] == '0'
+
+    @db.exec_prepared('exist', [@db.quote_ident(key)]) do |result|
+      return result[0]['count'].zero? if result[0]
+
+      false
     end
   rescue PG::Error => e
     @logger.fatal(e.message)
   end
 
   def add(key:, value:)
-    @logger.info("adding key")
-    @db.exec_params(%q{insert into urls (short,original) VALUES($1,$2);}, [@db.quote_ident(key), @db.quote_ident(value)])
+    @db.exec_prepared('add', [@db.quote_ident(key), @db.quote_ident(value)])
     true
   rescue PG::Error => e
     @logger.fatal(e.message)
@@ -73,8 +74,7 @@ class PgModel < Model
   end
 
   def get(key)
-    @logger.info("get key")
-    result = @db.exec_params(%q{select original from urls where short=$1}, [@db.quote_ident(key)])
+    result = @db.exec_prepared('find_id', [@db.quote_ident(key)])
     result.first()['original'] if result.first()
   rescue PG::Error => e
     @logger.fatal(e.message)
