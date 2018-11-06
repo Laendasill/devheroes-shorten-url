@@ -33,7 +33,7 @@ require 'pg'
 
 def pg_connection
   uri = URI.parse(ENV['DATABASE_URL'])
-  con = PG.connect(user: uri.user, host: uri.host, port: uri.port, password: uri.password)
+  con = PG.connect(user: uri.user, host: uri.host, port: uri.port, password: uri.password, dbname: uri.path[1..-1])
   con
 rescue PG::Error => e
   puts e.message
