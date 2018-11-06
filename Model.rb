@@ -37,8 +37,6 @@ def pg_connection
   con
 rescue PG::Error => e
   puts e.message
-ensure
-  con.close if con
 end
 
 class PgModel < Model
