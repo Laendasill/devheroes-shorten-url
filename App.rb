@@ -3,7 +3,8 @@ require "./UrlShortenForm"
 require "rack"
 require "./Model"
 
-db = Model.new
+#db = HashModel.new
+db = PgModel.new
 def error_page(response, message, status = 404)
   response.status = status
   response.write("errors occured: #{message}")

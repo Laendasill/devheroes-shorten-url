@@ -12,14 +12,16 @@ describe 'UrlShortenForm' do
   end
 
   it 'saves do database on save' do
-    db = Model.new
+    db = HashModel.new
     form = UrlShortenForm.new(valid_url, db)
     form.save
-    expect(db.get(form.short)).to be form.url_name
+    #puts form.short
+    puts db.get(form.short)
+    expect(db.get(form.short)).to eq(valid_url)
   end
 
   it 'is invalid for invalid url' do
-    db = Model.new
+    db = HashModel.new
     form = UrlShortenForm.new(invalid_url, db)
     form.save
     expect(form.valid?).to be false
