@@ -33,13 +33,18 @@ require 'pg'
 
 def pg_connection
   uri = URI.parse(ENV['DATABASE_URL'])
-  PG.connect(user: uri.user, host: uri.host, port: uri.port, password: uri.password)
+  con = PG.connect(user: uri.user, host: uri.host, port: uri.port, password: uri.password)
+  con
+rescue PG::Error => e
+  puts e.message
+ensure
+  con.close if con
 end
 
 class PgModel < Model
 
   def initialize(config={})
-    @db = local_connection
+    @db = pg_connection
     @db.prepare('add', %q{insert into urls (short,original) VALUES($1,$2);})
     @db.prepare('exist', %{select count(id) from urls where short = $1;})
     @db.prepare('find_id', %q{select original from urls where short=$1})
@@ -52,9 +57,11 @@ class PgModel < Model
   end
 
   def add(key:, value:)
-    result = @db.exec_prepared('add', [key, value])
-    # TODO: handle errors
+    @db.exec_prepared('add', [key, value])
     true
+  rescue PG::Error => e
+    puts e.message
+    false
   end
 
   def get(key)
