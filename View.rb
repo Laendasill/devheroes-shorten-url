@@ -1,3 +1,6 @@
+require "./url_shorten_service"
+require "./url_shorten_form"
+
 class View
   def initialize(response, request, db)
     @db = db

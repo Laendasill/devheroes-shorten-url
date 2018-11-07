@@ -1,5 +1,5 @@
 require "rspec"
-require "./UrlShortenService"
+require "./url_shorten_service"
 
 describe "UrlShortenService" do
 
