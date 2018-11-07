@@ -4,7 +4,7 @@ require "./View"
 class App
 
   def initialize
-    @db = HashModel.new
+    @db = PgModel.new
   end
 
   def call(env)

@@ -1,6 +1,7 @@
 require "./url_shorten_service"
+require "./redirect_link_service"
 require "./url_shorten_form"
-
+require "./Helpers"
 class View
   def initialize(response, request, db)
     @db = db
@@ -24,6 +25,8 @@ class View
 end
 
 class IndexPage < View
+
+
   def initialize(response, request, db)
     super(response, request, db)
   end
@@ -49,7 +52,7 @@ class IndexPage < View
 end
 
 class ShortenPage < View
-
+  include Helpers::View
   def initialize(response, request, db)
     super(response, request, db)
   end
@@ -65,15 +68,10 @@ class ShortenPage < View
   def render
     return redirect('/') unless @request.post?
 
-    host = @request.get_header('HTTP_HOST')
     url = UrlShortenForm.new(@request.params['url_name'], @db)
     if url.save
       @response.status = 200
-      @response.write(%(
-        <a href="http://#{host}/#{url.short}">
-          http://#{host}/#{url.short}
-        </a>
-      ))
+      @response.write(html_link(RedirectLinkService.call(@request, url)))
       @response.finish
     else
       return error_page(url.errors.join("\n"))
