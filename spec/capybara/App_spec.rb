@@ -2,7 +2,7 @@ require 'rspec'
 require 'capybara/rspec'
 require './App'
 
-Capybara.app = App
+Capybara.app = App.new
 
 describe 'the index page', type: :feature do
   it 'shows form' do
