@@ -1,9 +1,5 @@
-class BaseService
-  def self.call(*args, &block)
-    new(*args, &block).call
-  end
-end
 
+require './base_service'
 class UrlShortenService < BaseService
   def initialize(db)
     @db = db

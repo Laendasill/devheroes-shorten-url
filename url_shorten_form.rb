@@ -1,5 +1,5 @@
-require './UrlShortenService'
-require './UrlFormValidator'
+require './url_shorten_service'
+require './url_form_validator'
 
 class UrlShortenForm
   attr_accessor :url_name, :short

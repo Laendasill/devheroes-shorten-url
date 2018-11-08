@@ -1,5 +1,5 @@
 require 'rspec'
-require './UrlFormValidator'
+require './url_form_validator'
 
 describe 'UrlFormValidaotr' do
   let(:valid_url) { 'https://domain.pl'.freeze }

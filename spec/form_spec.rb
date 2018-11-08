@@ -1,5 +1,5 @@
 require 'rspec'
-require './UrlShortenForm'
+require './url_shorten_form'
 require './Model'
 
 describe 'UrlShortenForm' do
